@@ -19,8 +19,17 @@ MATERIJA is a responsive, multilingual portfolio website for a creative studio i
 - React 19
 - React DOM 19
 - Vite 7
-- esbuild
+- date-fns
 - Plain CSS
+
+## Assignment requirements
+
+This project satisfies **Javascript Advanced Oppgave 4: Vite Webpage**:
+
+- Vite is the development server and production build tool.
+- npm manages the project dependencies and scripts.
+- `date-fns` is the independently selected npm package. The Studio Journal imports it to parse and format each article date with the active Lithuanian, English, or Norwegian locale.
+- The finished multilingual creative-studio site is suitable for a portfolio.
 
 ## Requirements
 
@@ -43,8 +52,6 @@ Start the Vite development server:
 npm run dev
 ```
 
-The command first compiles `js/app.jsx` into the browser-compatible `js/app.js` bundle and then starts Vite.
-
 Open the local URL printed by Vite. Do not open `index.html` directly from the file system.
 
 ## Production build
@@ -55,7 +62,7 @@ Create an optimized production build:
 npm run build
 ```
 
-The generated website is placed in `dist`. The custom Vite plugin also copies all source images into `dist/images` so absolute `/images/...` paths continue to work after deployment.
+The generated website is placed in `dist`. Vite reads `js/app.jsx` directly from the module entry in `index.html`. The small custom Vite plugin copies the existing image folder into `dist/images` so the site's absolute `/images/...` paths continue to work after deployment.
 
 Preview the production build locally:
 
@@ -67,9 +74,8 @@ npm run preview
 
 | Command | Description |
 | --- | --- |
-| `npm run bundle` | Compiles React JSX into `js/app.js` with esbuild. |
-| `npm run dev` | Compiles the React source and starts the development server. |
-| `npm run build` | Compiles the React source and generates the production build. |
+| `npm run dev` | Starts the Vite development server. |
+| `npm run build` | Generates the optimized Vite production build. |
 | `npm run preview` | Serves the generated `dist` build locally. |
 
 ## Project structure
@@ -78,8 +84,7 @@ npm run preview
 .
 ├── images/            # Original WebP artwork and background images
 ├── js/
-│   ├── app.jsx        # Main React source, components, translations, and essays
-│   └── app.js         # Generated browser bundle; do not edit manually
+│   └── app.jsx        # Main React source, components, translations, and essays
 ├── dist/              # Generated production build
 ├── index.html         # Application document and React mount point
 ├── style.css          # Global styles, parallax layers, and media queries
@@ -89,7 +94,7 @@ npm run preview
 
 ## Editing the website
 
-Make JavaScript and React changes in `js/app.jsx`, not in `js/app.js`. The latter is generated automatically and will be overwritten by `npm run bundle`, `npm run dev`, or `npm run build`.
+Make JavaScript and React changes in `js/app.jsx`. Vite transforms the JSX and bundles npm dependencies during development and production builds.
 
 Styles and responsive breakpoints are defined in `style.css`. The current layout includes dedicated media queries for 1280 px, 1024 px, 800 px, 600 px, and 420 px widths, plus short landscape screens.
 

@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { format, parseISO } from "date-fns";
+import { enGB, lt, nb } from "date-fns/locale";
 
 // Stable technical keys allow the same works to be filtered regardless of
 // the currently selected interface language.
@@ -211,6 +213,8 @@ const translations = {
 };
 
 const languageNames = { lt: "Lietuvių", en: "English", no: "Norsk" };
+// Match the site's language keys with the corresponding date-fns locales.
+const dateLocales = { lt, en: enGB, no: nb };
 const navTargets = ["apie", "darbai", "studija", "kontaktai"];
 const filterKeys = ["all", "painting", "ceramics", "graphics"];
 
@@ -553,10 +557,11 @@ function StudioBlog({ t, language, blogRef }) {
   const [selectedStory, setSelectedStory] = useState(null);
   const [hoveredStory, setHoveredStory] = useState(null);
   const storyLinkRefs = useRef([]);
+  // Keep dates machine-readable in ISO format; date-fns localizes their display.
   const posts = [
-    { image: "/images/master-hands-720.webp", date: "18.08.2026" },
-    { image: "/images/margarita-evening-768.webp", date: "02.08.2026" },
-    { image: "/images/laurel-wreath-720.webp", date: "21.07.2026" },
+    { image: "/images/master-hands-720.webp", date: "2026-08-17" },
+    { image: "/images/margarita-evening-768.webp", date: "2026-08-02" },
+    { image: "/images/laurel-wreath-720.webp", date: "2026-07-21" },
   ];
 
   useEffect(() => {
@@ -622,7 +627,11 @@ function StudioBlog({ t, language, blogRef }) {
                 <img src={post.image} alt={t.blogPosts[index]} loading="lazy" />
               </div>
               <div className="blog-meta">
-                <span>{post.date}</span>
+                <time dateTime={post.date}>
+                  {format(parseISO(post.date), "P", {
+                    locale: dateLocales[language],
+                  })}
+                </time>
                 <span>0{index + 1}</span>
               </div>
               <h3>{t.blogPosts[index]}</h3>
