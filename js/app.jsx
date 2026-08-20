@@ -407,7 +407,20 @@ function LanguagePicker({ language, setLanguage, t }) {
 
 /** Fixed navigation and a menu optimized for small screens. */
 function Header({ menuOpen, setMenuOpen, language, setLanguage, t }) {
+  const menuButtonRef = useRef(null);
   const close = () => setMenuOpen(false);
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key !== "Escape") return;
+      setMenuOpen(false);
+      menuButtonRef.current?.focus();
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [menuOpen, setMenuOpen]);
+
   return (
     <>
       <header className="site-header">
@@ -424,6 +437,7 @@ function Header({ menuOpen, setMenuOpen, language, setLanguage, t }) {
         <div className="header-actions">
           <LanguagePicker language={language} setLanguage={setLanguage} t={t} />
           <button
+            ref={menuButtonRef}
             className="menu-button"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-expanded={menuOpen}
@@ -443,7 +457,11 @@ function Header({ menuOpen, setMenuOpen, language, setLanguage, t }) {
           <a
             key={navTargets[index]}
             href={`#${navTargets[index]}`}
-            onClick={close}
+            tabIndex={menuOpen ? undefined : -1}
+            onClick={() => {
+              close();
+              menuButtonRef.current?.focus();
+            }}
           >
             {label}
           </a>
@@ -457,6 +475,8 @@ function Header({ menuOpen, setMenuOpen, language, setLanguage, t }) {
 function Gallery({ t }) {
   const [filter, setFilter] = useState("all");
   const [selected, setSelected] = useState(null);
+  const modalCloseRef = useRef(null);
+  const modalTriggerRef = useRef(null);
   const filteredWorks = useMemo(
     () =>
       filter === "all"
@@ -467,12 +487,20 @@ function Gallery({ t }) {
 
   useEffect(() => {
     document.body.classList.toggle("modal-open", Boolean(selected));
-    const closeOnEscape = (event) =>
-      event.key === "Escape" && setSelected(null);
-    window.addEventListener("keydown", closeOnEscape);
+    if (!selected) return undefined;
+    modalCloseRef.current?.focus();
+    const handleModalKey = (event) => {
+      if (event.key === "Escape") setSelected(null);
+      if (event.key === "Tab") {
+        event.preventDefault();
+        modalCloseRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleModalKey);
     return () => {
       document.body.classList.remove("modal-open");
-      window.removeEventListener("keydown", closeOnEscape);
+      window.removeEventListener("keydown", handleModalKey);
+      modalTriggerRef.current?.focus();
     };
   }, [selected]);
 
@@ -488,6 +516,7 @@ function Gallery({ t }) {
             <button
               key={key}
               className={`filter ${filter === key ? "active" : ""}`}
+              aria-pressed={filter === key}
               onClick={() => setFilter(key)}
             >
               {t.filters[key]}
@@ -501,8 +530,12 @@ function Gallery({ t }) {
           return (
             <figure className="art-card" key={work.id}>
               <button
-                onClick={() => setSelected(work)}
+                onClick={(event) => {
+                  modalTriggerRef.current = event.currentTarget;
+                  setSelected(work);
+                }}
                 aria-label={`${t.openWork}: ${title}`}
+                aria-haspopup="dialog"
               >
                 <img
                   src={work.small || work.image}
@@ -536,7 +569,11 @@ function Gallery({ t }) {
             event.target === event.currentTarget && setSelected(null)
           }
         >
-          <button className="modal-close" onClick={() => setSelected(null)}>
+          <button
+            ref={modalCloseRef}
+            className="modal-close"
+            onClick={() => setSelected(null)}
+          >
             {t.close.toUpperCase()} ×
           </button>
           <figure className="modal-figure">
@@ -557,6 +594,8 @@ function StudioBlog({ t, language, blogRef }) {
   const [selectedStory, setSelectedStory] = useState(null);
   const [hoveredStory, setHoveredStory] = useState(null);
   const storyLinkRefs = useRef([]);
+  const storyModalCloseRef = useRef(null);
+  const storyModalTriggerRef = useRef(null);
   // Keep dates machine-readable in ISO format; date-fns localizes their display.
   const posts = [
     { image: "/images/master-hands-720.webp", date: "2026-08-17" },
@@ -566,8 +605,14 @@ function StudioBlog({ t, language, blogRef }) {
 
   useEffect(() => {
     document.body.classList.toggle("modal-open", selectedStory !== null);
-    const closeOnEscape = (event) =>
-      event.key === "Escape" && setSelectedStory(null);
+    if (selectedStory !== null) storyModalCloseRef.current?.focus();
+    const handleModalKey = (event) => {
+      if (event.key === "Escape") setSelectedStory(null);
+      if (event.key === "Tab" && selectedStory !== null) {
+        event.preventDefault();
+        storyModalCloseRef.current?.focus();
+      }
+    };
     // A strong CSS transform can offset the browser's regular hit area.
     // Check the visible label's actual rectangle in screen coordinates.
     const getVisibleLabelIndex = (clientX, clientY) =>
@@ -588,21 +633,26 @@ function StudioBlog({ t, language, blogRef }) {
       )
         return;
       const index = getVisibleLabelIndex(event.clientX, event.clientY);
-      if (index !== -1) setSelectedStory(index);
+      if (index !== -1) {
+        storyModalTriggerRef.current =
+          storyLinkRefs.current[index]?.closest("button");
+        setSelectedStory(index);
+      }
     };
     const trackVisibleLabel = (event) => {
       if (selectedStory !== null || event.pointerType !== "mouse") return;
       const index = getVisibleLabelIndex(event.clientX, event.clientY);
       setHoveredStory(index === -1 ? null : index);
     };
-    window.addEventListener("keydown", closeOnEscape);
+    window.addEventListener("keydown", handleModalKey);
     window.addEventListener("pointerdown", openFromVisibleLabel, true);
     window.addEventListener("pointermove", trackVisibleLabel, true);
     return () => {
       document.body.classList.remove("modal-open");
-      window.removeEventListener("keydown", closeOnEscape);
+      window.removeEventListener("keydown", handleModalKey);
       window.removeEventListener("pointerdown", openFromVisibleLabel, true);
       window.removeEventListener("pointermove", trackVisibleLabel, true);
+      if (selectedStory !== null) storyModalTriggerRef.current?.focus();
     };
   }, [selectedStory]);
 
@@ -638,9 +688,11 @@ function StudioBlog({ t, language, blogRef }) {
               <button
                 type="button"
                 className={hoveredStory === index ? "visual-hover" : ""}
-                onClick={(event) =>
-                  event.detail === 0 && setSelectedStory(index)
-                }
+                onClick={(event) => {
+                  if (event.detail !== 0) return;
+                  storyModalTriggerRef.current = event.currentTarget;
+                  setSelectedStory(index);
+                }}
                 aria-haspopup="dialog"
               >
                 <span
@@ -666,6 +718,7 @@ function StudioBlog({ t, language, blogRef }) {
           }
         >
           <button
+            ref={storyModalCloseRef}
             className="modal-close"
             onClick={() => setSelectedStory(null)}
           >

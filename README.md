@@ -18,7 +18,7 @@ MATERIJA is a responsive, multilingual portfolio website for a creative studio i
 
 - React 19
 - React DOM 19
-- Vite 7
+- Vite 8
 - date-fns
 - Plain CSS
 
@@ -33,7 +33,7 @@ This project satisfies **Javascript Advanced Oppgave 4: Vite Webpage**:
 
 ## Requirements
 
-- Node.js compatible with Vite 7
+- Node.js 22.12+, 24, or 26 (use a supported release line; Node.js 24 LTS is recommended)
 - npm
 
 ## Installation

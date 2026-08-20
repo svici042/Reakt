@@ -6,7 +6,11 @@ import { cpSync } from "node:fs";
 const copyImages = () => ({
   name: "copy-images",
   closeBundle() {
-    cpSync(new URL("./images", import.meta.url), new URL("./dist/images", import.meta.url), { recursive: true });
+    cpSync(
+      new URL("./images", import.meta.url),
+      new URL("./dist/images", import.meta.url),
+      { recursive: true }
+    );
   },
 });
 
